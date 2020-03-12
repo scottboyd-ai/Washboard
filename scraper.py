@@ -6,14 +6,19 @@ from scrapy.linkextractors import LinkExtractor
 from itemov import Itemov
 import nltk
 from nltk.corpus import stopwords
+from nltk import bigrams
 from nltk import word_tokenize
 
 
 def tokenizewords(text):
-    nltk.download('stopwords')
-    nltk.download('punkt')
+    # nltk.download('stopwords')
+    # nltk.download('punkt')
     stopwords_ = stopwords.words('english')
+    stopwords_ = [x.lower() for x in stopwords_]
     words = word_tokenize(text)
+    bigram_list = list(bigrams(text.split()))
+    bigram_list = [(x.lower(), y.lower()) for x, y in bigram_list]
+    words = [x.lower() for x in words]
     tokenized_words = dict()
     for word in words:
         if word not in list(stopwords_):
@@ -22,7 +27,16 @@ def tokenizewords(text):
                 tokenized_words[localword] += 1
             else:
                 tokenized_words[localword] = 1
-    return tokenized_words
+    bigram_count = dict()
+    for bigram in bigram_list:
+        if bigram in bigram_count:
+            bigram_count[bigram] += 1
+        else:
+            bigram_count[bigram] = 1
+    ret_val = []
+    ret_val.append(tokenized_words)
+    ret_val.append(bigram_count)
+    return ret_val
 
 
 class MySpider(CrawlSpider):
@@ -50,6 +64,9 @@ class MySpider(CrawlSpider):
             text = re.sub(r'\w+:\/{2}[\d\w-]+(\.[\d\w-]+)*(?:(?:\/[^\s/]*))*', '', text, flags=re.MULTILINE)
             text = re.sub('[^0-9a-zA-Z\s]+', '', text, flags=re.MULTILINE)
             text_dict = tokenizewords(text)
-            item = Itemov(text=text_dict)
+            item = Itemov()
+            item['words'] = text_dict[0]
+            item['bigram_list'] = text_dict[1]
+            item['url'] = response.url
             itemList.append(item)
         return itemList
