@@ -15,18 +15,19 @@ def tokenizewords(text):
     # nltk.download('punkt')
     stopwords_ = stopwords.words('english')
     stopwords_ = [x.lower() for x in stopwords_]
+    text_temp = [word for word in text.split() if word.lower() not in stopwords_]
+    text = ' '.join(text_temp)
     words = word_tokenize(text)
     bigram_list = list(bigrams(text.split()))
     bigram_list = [(x.lower(), y.lower()) for x, y in bigram_list]
     words = [x.lower() for x in words]
     tokenized_words = dict()
     for word in words:
-        if word not in list(stopwords_):
-            localword = word.lower()
-            if localword in tokenized_words:
-                tokenized_words[localword] += 1
-            else:
-                tokenized_words[localword] = 1
+        localword = word.lower()
+        if localword in tokenized_words:
+            tokenized_words[localword] += 1
+        else:
+            tokenized_words[localword] = 1
     bigram_count = dict()
     for bigram in bigram_list:
         if bigram in bigram_count:
